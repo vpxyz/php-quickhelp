@@ -3,6 +3,8 @@
 Provide quick help (and a eldoc beckend) for company-php and company-phpactor.
 It require [jq](https://stedolan.github.io/jq/ "Jq cmd-line json processor") to extract a short help from php manual.
 
+![php-quickhelp in action](php-quickhelp.png "php-quickhelp")
+
 ## usage
 
 After having installed this package, run `php-quickhelp--download-or-update` which downloads, from php.net, the php_manual_en.json file into `~/.emacs.d/php-quickhelp-manual` directory.
