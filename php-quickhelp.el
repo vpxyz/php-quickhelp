@@ -57,9 +57,6 @@
   (php-quickhelp--download-from-url php-quickhelp--url)
   )
 
-;; per rimuovere i tag html da (.return)
-;; fare (with-temp-buffer (insert text) (dom-texts (libxml-parse-html-region (point-min) (point))))
-;; dove text è quello che si è estratto con jq
 (defun php-quickhelp--function (candidate)
   "Search CANDIDATE in the php manual."
   ;; TODO: use a cache
