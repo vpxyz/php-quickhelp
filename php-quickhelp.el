@@ -60,23 +60,19 @@
 (defun php-quickhelp--function (candidate)
   "Search CANDIDATE in the php manual."
   ;; TODO: use a cache
-  (let (res resl tmp)
+  (let (res tmp)
     (setq res
           (shell-command-to-string
            (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest))
           )
-    (setq resl (split-string res "###"))
-    (setq tmp (cl-list* (nth 0 resl)
-                        (replace-regexp-in-string "\\s-+" "\s" (string-trim
-                                                                (with-temp-buffer (insert (nth 1 resl))
-                                                                                  (dom-texts (libxml-parse-html-region (point-min) (point))))
-                                                                ))
-                         (nth 2 resl)
-                         nil)
-          )
+    (setq tmp (split-string res "###"))
+    (setcar (nthcdr 1 tmp) (replace-regexp-in-string "\\s-+" "\s" (string-trim
+                                                                   (with-temp-buffer (insert (nth 1 tmp))
+                                                                                     (dom-texts (libxml-parse-html-region (point-min) (point))))
+                                                                   )))
     ;; a single "\n" isn't enough
     (if (string-match "^null*" res) nil (string-join tmp "\n\n"))
-  ))
+    ))
 
 (defun php-quickhelp--eldoc-function (candidate)
   "Search CANDIDATE in the php manual for eldoc."
@@ -113,29 +109,29 @@
 
 (when (require 'company-php nil 'noerror)
 ;;;###autoload
-(defun company-php--quickhelp (command &optional arg &rest ignored)
-  "Provide quickhelp as `doc-buffer' for `company-php'."
-  (interactive (list 'interactive))
-  (cl-case command
-    (doc-buffer
-     (let ((doc (php-quickhelp--function arg)))
-       (when doc
-         (company-doc-buffer doc))))
-    (t (apply #'company-php command arg ignored))))
-)
+  (defun company-php--quickhelp (command &optional arg &rest ignored)
+    "Provide quickhelp as `doc-buffer' for `company-php'."
+    (interactive (list 'interactive))
+    (cl-case command
+      (doc-buffer
+       (let ((doc (php-quickhelp--function arg)))
+         (when doc
+           (company-doc-buffer doc))))
+      (t (apply #'company-php command arg ignored))))
+  )
 
 (when (require 'company-phpactor nil 'noerror)
 ;;;###autoload
-(defun company-phpactor--quickhelp (command &optional arg &rest ignored)
-  "Provide quickhelp as `doc-buffer' for `company-phpactor'."
-  (interactive (list 'interactive))
-  (cl-case command
-    (doc-buffer
-     (let ((doc (php-quickhelp--function arg)))
-       (when doc
-         (company-doc-buffer doc))))
-    (t (apply #'company-phpactor command arg ignored))))
-)
+  (defun company-phpactor--quickhelp (command &optional arg &rest ignored)
+    "Provide quickhelp as `doc-buffer' for `company-phpactor'."
+    (interactive (list 'interactive))
+    (cl-case command
+      (doc-buffer
+       (let ((doc (php-quickhelp--function arg)))
+         (when doc
+           (company-doc-buffer doc))))
+      (t (apply #'company-phpactor command arg ignored))))
+  )
 
 (provide 'php-quickhelp)
 ;;; php-quickhelp ends here
