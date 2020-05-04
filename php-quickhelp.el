@@ -36,6 +36,8 @@
 (defvar php-quickhelp--dest (concat php-quickhelp--dir php-quickhelp--filename))
 (defvar php-quickhelp--url (concat "http://doc.php.net/downloads/json/" php-quickhelp--filename))
 (defvar php-quickhelp--jq-executable (concat (executable-find "jq") " "))
+(defvar php-quickhelp--eldoc-cache (make-hash-table :test 'equal))
+(defvar php-quickhelp--company-cache (make-hash-table :test 'equal))
 
 (defun php-quickhelp--download-from-url (url)
   "Download a php_manual_en.json file from URL to dest path."
@@ -59,47 +61,49 @@
 
 (defun php-quickhelp--function (candidate)
   "Search CANDIDATE in the php manual."
-  ;; TODO: use a cache
-  (let (res tmp)
-    (setq res
-          (shell-command-to-string
-           (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest))
-          )
-    (setq tmp (split-string res "###"))
-    (setcar (nthcdr 1 tmp) (replace-regexp-in-string "\\s-+" "\s" (string-trim
-                                                                   (with-temp-buffer (insert (nth 1 tmp))
-                                                                                     (dom-texts (libxml-parse-html-region (point-min) (point))))
-                                                                   )))
-    ;; a single "\n" isn't enough
-    (if (string-match "^null*" res) nil (string-join tmp "\n\n"))
-    ))
+  (if (setq value (gethash candidate php-quickhelp--company-cache)) value
+    (let (res tmp)
+      (setq res
+            (shell-command-to-string
+             (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest))
+            )
+      (if (string-match "^null*" res) nil
+        (setq tmp (split-string res "###"))
+        (setcar (nthcdr 1 tmp) (replace-regexp-in-string "\\s-+" "\s" (string-trim
+                                                                       (with-temp-buffer (insert (nth 1 tmp))
+                                                                                         (dom-texts (libxml-parse-html-region (point-min) (point))))
+                                                                       )))
+        ;; a single "\n" isn't enough
+        (puthash candidate (string-join tmp "\n\n") php-quickhelp--company-cache))
+      ))
+  )
 
 (defun php-quickhelp--eldoc-function (candidate)
   "Search CANDIDATE in the php manual for eldoc."
-  ;;TODO: use a cache.
-  (let (res tmp arguments pos)
-    (setq res
-          (shell-command-to-string
-           (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.prototype)\"' " php-quickhelp--dest))
-          )
-    (if (string-match "^null*" res) nil
-      (setq tmp (split-string res " "))
-      (when tmp
-        (cl-dolist (arg tmp)
-          (setq arguments
-                (concat arguments
-                        (if (setq pos (string-match "\(" arg))
-                            (concat (propertize (substring arg 0 pos) 'face 'font-lock-function-name-face) (substring arg pos nil))
-                          (if (string-match "\\$" arg)
-                              (propertize arg 'face '(:weight bold))
-                            arg
+  (if (setq value (gethash candidate php-quickhelp--eldoc-cache)) value
+    (let (res tmp arguments pos)
+      (setq res
+            (shell-command-to-string
+             (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.prototype)\"' " php-quickhelp--dest))
+            )
+      (if (string-match "^null*" res) nil
+        (setq tmp (split-string res " "))
+        (when tmp
+          (cl-dolist (arg tmp)
+            (setq arguments
+                  (concat arguments
+                          (if (setq pos (string-match "\(" arg))
+                              (concat (propertize (substring arg 0 pos) 'face 'font-lock-function-name-face) (substring arg pos nil))
+                            (if (string-match "\\$" arg)
+                                (propertize arg 'face '(:weight bold))
+                              arg
+                              )
                             )
-                          )
-                        " "
-                        ))
-          ))
-      arguments)
-    ))
+                          " "
+                          ))
+            ))
+        (puthash candidate arguments php-quickhelp--eldoc-cache))
+      )))
 
 ;;;###autoload
 (defun php-quickhelp--at-point ()
