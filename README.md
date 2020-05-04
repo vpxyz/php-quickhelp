@@ -5,7 +5,7 @@ It require [jq](https://stedolan.github.io/jq/ "Jq cmd-line json processor") to 
 
 ![php-quickhelp in action](php-quickhelp.png "php-quickhelp")
 
-## usage
+## Usage
 
 After having installed this package, run `php-quickhelp--download-or-update` which downloads, from php.net, the php_manual_en.json file into `~/.emacs.d/php-quickhelp-manual` directory.
 
@@ -46,5 +46,4 @@ The function `php-quickhelp--at-point` can be used to show the documentation in 
 
 ## TODO
 
-- store jq results into cache
 - ac-php support
