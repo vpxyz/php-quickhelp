@@ -77,14 +77,29 @@
 (defun php-quickhelp--eldoc-function (candidate)
   "Search CANDIDATE in the php manual for eldoc."
   ;;TODO: use a cache.
-  (let ((res nil))
+  (let (res tmp arguments pos)
     (setq res
           (shell-command-to-string
            (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.prototype)\"' " php-quickhelp--dest))
           )
-    (if (string-match "^null*" res) nil res)
-    )
-  )
+    (if (string-match "^null*" res) nil
+      (setq tmp (split-string res " "))
+      (when tmp
+        (cl-dolist (arg tmp)
+          (setq arguments
+                (concat arguments
+                        (if (setq pos (string-match "\(" arg))
+                            (concat (propertize (substring arg 0 pos) 'face 'font-lock-function-name-face) (substring arg pos nil))
+                          (if (string-match "\\$" arg)
+                              (propertize arg 'face '(:weight bold))
+                            arg
+                            )
+                          )
+                        " "
+                        ))
+          ))
+      arguments)
+    ))
 
 ;;;###autoload
 (defun php-quickhelp--at-point ()
