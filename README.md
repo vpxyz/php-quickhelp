@@ -18,7 +18,7 @@ For company-phpactor you can do something like this:
     ;; .... other configs
     (require 'php-quickhelp)
     (set (make-local-variable 'company-backends)
-    '(company-phpactor--quickhelp company-web-html company-dabbrev-code company-files))
+    '(php-quickhelp--company-phpactor company-web-html company-dabbrev-code company-files))
 (company-mode)))
 
 ```
@@ -30,7 +30,7 @@ For company-php, something like this:
     ;; .... other configs
     (require 'php-quickhelp)
     (set (make-local-variable 'company-backends)
-    '(company-ph--quickhelp company-web-html company-dabbrev-code company-files))
+    '(php-quickhelp--company-php company-web-html company-dabbrev-code company-files))
 (company-mode)))
 
 ```
@@ -39,7 +39,7 @@ If you want to use the eldoc backend you can put, in your php-mode-hook, this:
 
 ``` elisp
 (setq eldoc-documentation-function
-       'php-quickdoc--eldoc-func)
+       'php-quickhelp--eldoc-func)
 ```
 
 The function `php-quickhelp--at-point` can be used to show the documentation in the echo area.

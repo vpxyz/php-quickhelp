@@ -1,8 +1,9 @@
-;;; php-quickhelp.el --- quickhelp at point for php
-;;; Version: 0.1
-;;; Author: Vincenzo Pupillo
-;;; URL: https://github.com/xyzvp/php-quickhelp
-
+;;; php-quickhelp.el --- quickhelp at point for php -*- lexical-binding: t; -*-
+;; Copyright (C) 2020 Vincenzo Pupillo
+;; Version: 0.1
+;; Author: Vincenzo Pupillo
+;; URL: https://github.com/xyzvp/php-quickhelp
+;; Package-Requires: ((emacs "25.1"))
 ;;; Commentary:
 ;; The project is hosted at https://github.com/xyzvp/php-quickhelp
 ;; The latest version, and all the relevant information can be found there.
@@ -52,12 +53,10 @@
           (message (format "Downloaded php manual from %s to %s." url php-quickhelp--dest)))
       (error "Not found %s" url))))
 
-;;;###autoload
 (defun php-quickhelp--download-or-update ()
   "Download or update the manual from php.net."
   (interactive)
-  (php-quickhelp--download-from-url php-quickhelp--url)
-  )
+  (php-quickhelp--download-from-url php-quickhelp--url))
 
 (defun php-quickhelp--function (candidate)
   "Search CANDIDATE in the php manual."
@@ -65,20 +64,16 @@
     (let (res tmp)
       (setq res
             (shell-command-to-string
-             (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest))
-            )
+             (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest)))
       (if (string-match "^null*" res) nil
         (setq tmp (split-string res "###"))
         (setcar (nthcdr 1 tmp) (replace-regexp-in-string "\\s-+" "\s" (string-trim
                                                                        (with-temp-buffer (insert (nth 1 tmp))
-                                                                                         (dom-texts (libxml-parse-html-region (point-min) (point))))
-                                                                       )))
+                                                                                         (dom-texts (libxml-parse-html-region (point-min) (point)))))))
         ;; sometimes "return" content is empty, better remove it
         (if (equal (string-trim (nth 1 tmp)) "") (setq tmp (remove (nth 1 tmp) tmp)) nil)
         ;; a single "\n" isn't enough
-        (puthash candidate (string-join tmp "\n\n") php-quickhelp--company-cache))
-      ))
-  )
+        (puthash candidate (string-join tmp "\n\n") php-quickhelp--company-cache)))))
 
 (defun php-quickhelp--eldoc-function (candidate)
   "Search CANDIDATE in the php manual for eldoc."
@@ -86,8 +81,7 @@
     (let (res tmp arguments pos)
       (setq res
             (shell-command-to-string
-             (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.prototype)\"' " php-quickhelp--dest))
-            )
+             (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.prototype)\"' " php-quickhelp--dest)))
       (if (string-match "^null*" res) nil
         (setq tmp (split-string res " "))
         (when tmp
@@ -98,24 +92,16 @@
                               (concat (propertize (substring arg 0 pos) 'face 'font-lock-function-name-face) (substring arg pos nil))
                             (if (string-match "\\$" arg)
                                 (propertize arg 'face '(:weight bold))
-                              arg
-                              )
-                            )
-                          " "
-                          ))
-            ))
-        (puthash candidate arguments php-quickhelp--eldoc-cache))
-      )))
+                              arg))
+                          " "))))
+        (puthash candidate arguments php-quickhelp--eldoc-cache)))))
 
-;;;###autoload
 (defun php-quickhelp--at-point ()
   "Show the purpose of a function at point."
   (interactive)
   (let ((candidate (symbol-at-point)))
     (when candidate
-      (message (php-quickhelp--function (format "%s" candidate)))
-      )
-    ))
+      (message (php-quickhelp--function (format "%s" candidate))))))
 
 ;;;###autoload
 (defun php-quickhelp--eldoc-func ()
@@ -123,14 +109,12 @@
   (interactive)
   (let ((candidate (symbol-at-point)))
     (when candidate
-      (message (php-quickhelp--eldoc-function (format "%s" candidate)))
-      )
-    ))
+      (message (php-quickhelp--eldoc-function (format "%s" candidate))))))
 
 
 (when (require 'company-php nil 'noerror)
 ;;;###autoload
-  (defun company-php--quickhelp (command &optional arg &rest ignored)
+  (defun php-quickhelp--company-php (command &optional arg &rest ignored)
     "Provide quickhelp as `doc-buffer' for `company-php'."
     (interactive (list 'interactive))
     (cl-case command
@@ -138,12 +122,11 @@
        (let ((doc (php-quickhelp--function arg)))
          (when doc
            (company-doc-buffer doc))))
-      (t (apply #'company-php command arg ignored))))
-  )
+      (t (apply #'company-php command arg ignored)))))
 
 (when (require 'company-phpactor nil 'noerror)
 ;;;###autoload
-  (defun company-phpactor--quickhelp (command &optional arg &rest ignored)
+  (defun php-quickhelp--company-phpactor (command &optional arg &rest ignored)
     "Provide quickhelp as `doc-buffer' for `company-phpactor'."
     (interactive (list 'interactive))
     (cl-case command
@@ -151,8 +134,7 @@
        (let ((doc (php-quickhelp--function arg)))
          (when doc
            (company-doc-buffer doc))))
-      (t (apply #'company-phpactor command arg ignored))))
-  )
+      (t (apply #'company-phpactor command arg ignored)))))
 
 (provide 'php-quickhelp)
-;;; php-quickhelp ends here
+;;; php-quickhelp.el ends here
