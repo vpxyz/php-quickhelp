@@ -73,6 +73,8 @@
                                                                        (with-temp-buffer (insert (nth 1 tmp))
                                                                                          (dom-texts (libxml-parse-html-region (point-min) (point))))
                                                                        )))
+        ;; sometimes "return" content is empty, better remove it
+        (if (equal (string-trim (nth 1 tmp)) "") (setq tmp (remove (nth 1 tmp) tmp)) nil)
         ;; a single "\n" isn't enough
         (puthash candidate (string-join tmp "\n\n") php-quickhelp--company-cache))
       ))
