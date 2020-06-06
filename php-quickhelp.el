@@ -35,7 +35,7 @@
 (defvar php-quickhelp--dir (expand-file-name (locate-user-emacs-file "php-quickhelp-manual/")))
 (defvar php-quickhelp--filename "php_manual_en.json")
 (defvar php-quickhelp--dest (concat php-quickhelp--dir php-quickhelp--filename))
-(defvar php-quickhelp--url (concat "http://doc.php.net/downloads/json/" php-quickhelp--filename))
+(defvar php-quickhelp--url (concat "http://doc.php.net/downloads/json/" php-quickhelp--filename)) ;; https isn't available
 (defvar php-quickhelp--jq-executable (concat (executable-find "jq") " "))
 (defvar php-quickhelp--eldoc-cache (make-hash-table :test 'equal))
 (defvar php-quickhelp--company-cache (make-hash-table :test 'equal))
@@ -96,21 +96,32 @@
                           " "))))
         (puthash candidate arguments php-quickhelp--eldoc-cache)))))
 
+(defun php-quickhelp--from-candidate2jq (candidate)
+  "Escape CANDIDATE properly for jq."
+  (let (tmp)
+    ;; a static function call needs more work
+    (if (not (eq (get-text-property 0 'face candidate) 'php-static-method-call))
+        (setq tmp (substring-no-properties candidate))
+      ;; thing-at-point-looking-at requires a dirty trick in order to handle long static function call
+      (when (thing-at-point-looking-at "\\sw*\\\\*\\sw*\\\\*\\sw*\\\\*\\sw+::\\sw+")
+        (setq tmp (buffer-substring (match-beginning 0) (match-end 0)))))
+    (replace-regexp-in-string (regexp-quote "\\") "\\\\" tmp t t)))
+
+;;;###autoload
 (defun php-quickhelp--at-point ()
   "Show the purpose of a function at point."
   (interactive)
-  (let ((candidate (symbol-at-point)))
+  (let ((candidate (thing-at-point 'sexp)))
     (when candidate
-      (message (php-quickhelp--function (format "%s" candidate))))))
+      (message (php-quickhelp--function (php-quickhelp--from-candidate2jq candidate))))))
 
 ;;;###autoload
 (defun php-quickhelp--eldoc-func ()
   "Php-quickhelp integration for eldoc."
   (interactive)
-  (let ((candidate (symbol-at-point)))
+  (let ((candidate (thing-at-point 'sexp)))
     (when candidate
-      (message (php-quickhelp--eldoc-function (format "%s" candidate))))))
-
+      (message (php-quickhelp--eldoc-function (php-quickhelp--from-candidate2jq candidate))))))
 
 (when (require 'company-php nil 'noerror)
 ;;;###autoload
