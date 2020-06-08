@@ -27,6 +27,26 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
+;; Quick start:
+;; First of all you must install jq (https://stedolan.github.io/jq/).
+;; Second run php-quickhelp--download-or-update.
+;;
+;; php-quickhelp can be used with or without company-mode. With company-mode you can use company-php or company-phpactor.
+;; As an example, for company-phpactor,  you can do:
+;; (add-hook 'php-mode-hook (lambda ()
+;;     ;; .... other configs
+;;     (require 'php-quickhelp)
+;;     (set (make-local-variable 'company-backends)
+;;     '(php-quickhelp--company-phpactor company-web-html company-dabbrev-code company-files))
+;; (company-mode)))
+;;
+;; It's possibile to use php-quickhelp as eldoc backend
+;; (setq eldoc-documentation-function
+;;       'php-quickhelp--eldoc-func)
+;;
+;; The function php-quickhelp--at-point can be used to show in the minibuffer the documentation.
+;; For detail see: https://github.com/vpxyz/php-quickhelp
+
 ;;; Code:
 
 (require 'thingatpt)
