@@ -1,9 +1,8 @@
 ;;; php-quickhelp Cask file
-
-(source gnu)
 (source melpa)
 
 (package-file "php-quickhelp.el")
+(files "*.el")
 
 (development
  (depends-on "f")
