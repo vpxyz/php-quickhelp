@@ -51,6 +51,7 @@
 
 (require 'thingatpt)
 (require 'dom)
+(require 'subr-x)
 
 (defvar php-quickhelp--dir (expand-file-name (locate-user-emacs-file "php-quickhelp-manual/")))
 (defvar php-quickhelp--filename "php_manual_en.json")
