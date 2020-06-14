@@ -56,7 +56,7 @@
 (defvar php-quickhelp--dir (expand-file-name (locate-user-emacs-file "php-quickhelp-manual/")))
 (defvar php-quickhelp--filename "php_manual_en.json")
 (defvar php-quickhelp--dest (concat php-quickhelp--dir php-quickhelp--filename))
-(defvar php-quickhelp--url (concat "http://doc.php.net/downloads/json/" php-quickhelp--filename)) ;; https isn't available doc doc.php.net
+(defvar php-quickhelp--url (concat "http://doc.php.net/downloads/json/" php-quickhelp--filename)) ;; https isn't available on doc.php.net
 (defvar php-quickhelp--jq-executable (concat (executable-find "jq") " "))
 (defvar php-quickhelp--eldoc-cache (make-hash-table :test 'equal))
 (defvar php-quickhelp--company-cache (make-hash-table :test 'equal))
