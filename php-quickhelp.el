@@ -1,6 +1,6 @@
 ;;; php-quickhelp.el --- Quickhelp at point for php -*- lexical-binding: t; -*-
 ;; Copyright (C) 2020 Vincenzo Pupillo
-;; Version: 0.2
+;; Version: 0.2.2
 ;; Author: Vincenzo Pupillo
 ;; URL: https://github.com/xyzvp/php-quickhelp
 ;; Package-Requires: ((emacs "25.1"))
