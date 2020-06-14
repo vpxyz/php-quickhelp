@@ -1,4 +1,4 @@
-;;; php-quickhelp.el --- quickhelp at point for php -*- lexical-binding: t; -*-
+;;; php-quickhelp.el --- Quickhelp at point for php -*- lexical-binding: t; -*-
 ;; Copyright (C) 2020 Vincenzo Pupillo
 ;; Version: 0.2
 ;; Author: Vincenzo Pupillo
@@ -56,7 +56,7 @@
 (defvar php-quickhelp--dir (expand-file-name (locate-user-emacs-file "php-quickhelp-manual/")))
 (defvar php-quickhelp--filename "php_manual_en.json")
 (defvar php-quickhelp--dest (concat php-quickhelp--dir php-quickhelp--filename))
-(defvar php-quickhelp--url (concat "http://doc.php.net/downloads/json/" php-quickhelp--filename)) ;; https isn't available
+(defvar php-quickhelp--url (concat "http://doc.php.net/downloads/json/" php-quickhelp--filename)) ;; https isn't available doc doc.php.net
 (defvar php-quickhelp--jq-executable (concat (executable-find "jq") " "))
 (defvar php-quickhelp--eldoc-cache (make-hash-table :test 'equal))
 (defvar php-quickhelp--company-cache (make-hash-table :test 'equal))
@@ -66,12 +66,12 @@
   (let ((dest php-quickhelp--dir))
     (unless (file-exists-p dest)
       (make-directory dest t))
-    (message (format "Download php manual from %s. Please wait ..." url))
+    (message "Download php manual from %s. Please wait ..." url)
     (url-handler-mode t)
     (if (file-exists-p url)
         (progn
           (url-copy-file url php-quickhelp--dest t)
-          (message (format "Downloaded php manual from %s to %s." url php-quickhelp--dest)))
+          (message "Downloaded php manual from %s to %s." url php-quickhelp--dest))
       (error "Not found %s" url))))
 
 (defun php-quickhelp--download-or-update ()
@@ -128,7 +128,6 @@
         (setq tmp (buffer-substring (match-beginning 0) (match-end 0)))))
     (replace-regexp-in-string (regexp-quote "\\") "\\\\" tmp t t)))
 
-;;;###autoload
 (defun php-quickhelp--at-point ()
   "Show the purpose of a function at point."
   (interactive)
@@ -136,7 +135,6 @@
     (when candidate
       (message (php-quickhelp--function (php-quickhelp--from-candidate2jq candidate))))))
 
-;;;###autoload
 (defun php-quickhelp--eldoc-func ()
   "Php-quickhelp integration for eldoc."
   (interactive)
@@ -145,7 +143,6 @@
       (message (php-quickhelp--eldoc-function (php-quickhelp--from-candidate2jq candidate))))))
 
 (when (require 'company-php nil 'noerror)
-;;;###autoload
   (defun php-quickhelp--company-php (command &optional arg &rest ignored)
     "Provide quickhelp as `doc-buffer' for `company-php'."
     (interactive (list 'interactive))
@@ -157,7 +154,6 @@
       (t (apply #'company-php command arg ignored)))))
 
 (when (require 'company-phpactor nil 'noerror)
-;;;###autoload
   (defun php-quickhelp--company-phpactor (command &optional arg &rest ignored)
     "Provide quickhelp as `doc-buffer' for `company-phpactor'."
     (interactive (list 'interactive))
