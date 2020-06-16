@@ -87,20 +87,20 @@
 (defun php-quickhelp--function (candidate)
   "Search CANDIDATE in the php manual."
   (or (gethash candidate php-quickhelp--company-cache)
-      (let (result tmp-string)
+      (let (result tmp-strings)
         (setq result
               (shell-command-to-string
                (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest)))
         (unless (string-match "^null*" result)
-          (setq tmp-string (split-string result "###"))
-          (setcar (nthcdr 1 tmp-string) (replace-regexp-in-string "\\s-+" "\s" (string-trim
-                                                                         (with-temp-buffer (insert (nth 1 tmp-string))
+          (setq tmp-strings (split-string result "###"))
+          (setcar (nthcdr 1 tmp-strings) (replace-regexp-in-string "\\s-+" "\s" (string-trim
+                                                                         (with-temp-buffer (insert (nth 1 tmp-strings))
                                                                                            (dom-texts (libxml-parse-html-region (point-min) (point)))))))
           ;; sometimes "return" content is empty, better remove it
-          (when (string= (string-trim (nth 1 tmp-string)) "")
-            (setq tmp-string (remove (nth 1 tmp-string) tmp-string)) nil)
+          (when (string= (string-trim (nth 1 tmp-strings)) "")
+            (setq tmp-strings (remove (nth 1 tmp-strings) tmp-strings)) nil)
           ;; a single "\n" isn't enough
-          (puthash candidate (string-join tmp-string "\n\n") php-quickhelp--company-cache)))))
+          (puthash candidate (string-join tmp-strings "\n\n") php-quickhelp--company-cache)))))
 
 (defun php-quickhelp--eldoc-function (candidate)
   "Search CANDIDATE in the php manual for eldoc."
@@ -139,7 +139,7 @@
   (interactive)
   (let ((candidate (thing-at-point 'symbol)))
     (when candidate
-      (message (php-quickhelp--function (php-quickhelp--from-candidate2jq candidate))))))
+      (message "%s" (php-quickhelp--function (php-quickhelp--from-candidate2jq candidate))))))
 
 (defun php-quickhelp-eldoc-func ()
   "Php-quickhelp integration for eldoc."
