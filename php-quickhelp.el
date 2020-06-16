@@ -137,13 +137,13 @@
 (defun php-quickhelp-at-point ()
   "Show the purpose of a function at point."
   (interactive)
-  (let ((candidate (thing-at-point 'sexp)))
+  (let ((candidate (thing-at-point 'symbol)))
     (when candidate
       (message (php-quickhelp--function (php-quickhelp--from-candidate2jq candidate))))))
 
 (defun php-quickhelp-eldoc-func ()
   "Php-quickhelp integration for eldoc."
-  (let ((candidate (thing-at-point 'sexp)))
+  (let ((candidate (thing-at-point 'symbol)))
     (when candidate
       (message (php-quickhelp--eldoc-function (php-quickhelp--from-candidate2jq candidate))))))
 
