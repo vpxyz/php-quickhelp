@@ -1,12 +1,33 @@
 ;;; php-quickhelp.el --- Quickhelp at point for php -*- lexical-binding: t; -*-
 ;; Copyright (C) 2020 Vincenzo Pupillo
-;; Version: 0.3.1
+;; Version: 0.3.2
 ;; Author: Vincenzo Pupillo
-;; URL: https://github.com/xyzvp/php-quickhelp
+;; URL: https://github.com/vpxyz/php-quickhelp
 ;; Package-Requires: ((emacs "25.1"))
 ;;; Commentary:
-;; The project is hosted at https://github.com/xyzvp/php-quickhelp
+;; The project is hosted at https://github.com/vpxyz/php-quickhelp
 ;; The latest version, and all the relevant information can be found there.
+;; 
+;; First of all you must install jq (https://stedolan.github.io/jq/).
+;; Second run php-quickhelp-download-or-update.
+;;
+;; php-quickhelp can be used with or without company-mode.
+;; With company-mode you can use company-php or company-phpactor.
+;; As an example, for company-phpactor,  you can do:
+;; (add-hook 'php-mode-hook (lambda ()
+;;     ;; .... other configs
+;;     (require 'php-quickhelp)
+;;     (set (make-local-variable 'company-backends)
+;;     '(php-quickhelp-company-phpactor company-web-html company-dabbrev-code company-files))
+;; (company-mode)))
+;;
+;; It's possible to use php-quickhelp as eldoc backend
+;; (setq eldoc-documentation-function
+;;       'php-quickhelp-eldoc-func)
+;;
+;; The function php-quickhelp-at-point can be used to show in the minibuffer the documentation.
+;; For detail see: https://github.com/vpxyz/php-quickhelp
+
 
 ;;; License:
 
@@ -26,26 +47,6 @@
 ;; along with this program ; see the file COPYING.  If not, write to
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
-
-;; Quick start:
-;; First of all you must install jq (https://stedolan.github.io/jq/).
-;; Second run php-quickhelp--download-or-update.
-;;
-;; php-quickhelp can be used with or without company-mode. With company-mode you can use company-php or company-phpactor.
-;; As an example, for company-phpactor,  you can do:
-;; (add-hook 'php-mode-hook (lambda ()
-;;     ;; .... other configs
-;;     (require 'php-quickhelp)
-;;     (set (make-local-variable 'company-backends)
-;;     '(php-quickhelp-company-phpactor company-web-html company-dabbrev-code company-files))
-;; (company-mode)))
-;;
-;; It's possible to use php-quickhelp as eldoc backend
-;; (setq eldoc-documentation-function
-;;       'php-quickhelp-eldoc-func)
-;;
-;; The function php-quickhelp--at-point can be used to show in the minibuffer the documentation.
-;; For detail see: https://github.com/vpxyz/php-quickhelp
 
 ;;; Code:
 
@@ -150,7 +151,6 @@
 (when (require 'company-php nil 'noerror)
   (defun php-quickhelp-company-php (command &optional arg &rest ignored)
     "Provide quickhelp as `doc-buffer' for `company-php'."
-    (interactive (list 'interactive))
     (cl-case command
       (doc-buffer
        (let ((doc (php-quickhelp--function arg)))
@@ -161,7 +161,6 @@
 (when (require 'company-phpactor nil 'noerror)
   (defun php-quickhelp-company-phpactor (command &optional arg &rest ignored)
     "Provide quickhelp as `doc-buffer' for `company-phpactor'."
-    (interactive (list 'interactive))
     (cl-case command
       (doc-buffer
        (let ((doc (php-quickhelp--function arg)))
