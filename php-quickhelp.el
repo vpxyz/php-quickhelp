@@ -110,7 +110,7 @@
         (setq result
               (shell-command-to-string
                (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.prototype)\"' " php-quickhelp--dest)))
-        (if (string-match "^null*" result) nil
+        (unless (string-match "^null*" result)
           (setq tmp-string (split-string result " "))
           (when tmp-string
             (cl-dolist (arg tmp-string)
