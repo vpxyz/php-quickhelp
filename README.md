@@ -1,9 +1,17 @@
-# php-quickhelp
+# php-quickhelp [![MELPA](https://melpa.org/packages/php-quickhelp-badge.svg)](https://melpa.org/#/php-quickhelp)
 
 Provide quick help (and a eldoc beckend) for company-php and company-phpactor.
 It require [jq](https://stedolan.github.io/jq/ "Jq cmd-line json processor") to extract a short help from php manual.
 
 ![php-quickhelp in action](php-quickhelp.png "php-quickhelp")
+
+## Installation
+
+You can install `php-quickhelp` from [MELPA](http://melpa.org/#/php-quickhelp) with `package.el`
+
+```
+ M-x package-install php-quickhelp
+```
 
 ## Usage
 
