@@ -17,7 +17,8 @@ You can install `php-quickhelp` from [MELPA](http://melpa.org/#/php-quickhelp) o
 
 After having installed this package, run `php-quickhelp-download-or-update` which downloads, from php.net, the php_manual_en.json file into `~/.emacs.d/php-quickhelp-manual` directory.
 
-php-quickhelp wraps company-php and company-phpactor.
+php-quickhelp can be used with or without company-php and company-quickhelp.
+When used with company-php and company-quickhelp, it works like a wrapper for company-php or company-phpactor.
 
 For company-phpactor you can do something like this:
 
@@ -55,3 +56,7 @@ The function `php-quickhelp-at-point` can be used to show the documentation in t
 ## TODO
 
 - ac-php support
+
+## ISSUE
+
+- html table rendering inside tooltips isn't good in some cases.

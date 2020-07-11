@@ -1,18 +1,18 @@
 ;;; php-quickhelp.el --- Quickhelp at point for php -*- lexical-binding: t; -*-
 ;; Copyright (C) 2020 Vincenzo Pupillo
-;; Version: 0.3.2
+;; Version: 0.3.3
 ;; Author: Vincenzo Pupillo
 ;; URL: https://github.com/vpxyz/php-quickhelp
 ;; Package-Requires: ((emacs "25.1"))
 ;;; Commentary:
 ;; The project is hosted at https://github.com/vpxyz/php-quickhelp
 ;; The latest version, and all the relevant information can be found there.
-;; 
+;;
 ;; First of all you must install jq (https://stedolan.github.io/jq/).
 ;; Second run php-quickhelp-download-or-update.
 ;;
-;; php-quickhelp can be used with or without company-mode.
-;; With company-mode you can use company-php or company-phpactor.
+;; php-quickhelp can be used with or without company-php and company-quickhelp.
+;; When used with company-php and company-quickhelp, it works like a wrapper for company-php or company-phpactor.
 ;; As an example, for company-phpactor,  you can do:
 ;; (add-hook 'php-mode-hook (lambda ()
 ;;     ;; .... other configs
@@ -51,9 +51,9 @@
 ;;; Code:
 
 (require 'thingatpt)
-(require 'dom)
 (require 'subr-x)
 (require 'url-http)
+(require 'shr)
 
 (declare-function company-doc-buffer "ext:company.el")
 (declare-function company-php "ext:company-php.el")
@@ -85,8 +85,27 @@
   (interactive)
   (php-quickhelp--download-from-url php-quickhelp--url))
 
+(defun php-quickhelp--html2fontify-string (doc)
+  "Convert html DOC to fontified string."
+  (with-temp-buffer (insert doc)
+                    (setq-local shr-use-fonts nil)
+                    (setq-local shr-cookie-policy nil)
+                    (setq-local shr-use-colors nil)
+                    (setq-local shr-discard-aria-hidden t)
+                    (setq-local shr-inhibit-images t)
+                    (setq-local indent-tabs-mode nil)
+                    (shr-render-region (point-min) (point))
+                    ;; remove last '\n'
+                    (let ((s (buffer-string)))
+                    (if (string-match "[ \t\n\r]+\\'" s)
+                        (replace-match "" t t s)
+                      s))
+                    ))
+
 (defun php-quickhelp--function (candidate)
   "Search CANDIDATE in the php manual."
+  (or (fboundp 'libxml-parse-html-region)
+      (error "This function requires Emacs to be compiled with libxml2"))
   (or (gethash candidate php-quickhelp--company-cache)
       (let (result tmp-strings)
         (setq result
@@ -94,9 +113,7 @@
                (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest)))
         (unless (string-match "^null*" result)
           (setq tmp-strings (split-string result "###"))
-          (setcar (nthcdr 1 tmp-strings) (replace-regexp-in-string "\\s-+" "\s" (string-trim
-                                                                         (with-temp-buffer (insert (nth 1 tmp-strings))
-                                                                                           (dom-texts (libxml-parse-html-region (point-min) (point)))))))
+          (setcar (nthcdr 1 tmp-strings) (php-quickhelp--html2fontify-string (nth 1 tmp-strings)))
           ;; sometimes "return" content is empty, better remove it
           (when (string= (string-trim (nth 1 tmp-strings)) "")
             (setq tmp-strings (remove (nth 1 tmp-strings) tmp-strings)) nil)
