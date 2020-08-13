@@ -66,6 +66,8 @@
 (defvar php-quickhelp--jq-executable (concat (executable-find "jq") " "))
 (defvar php-quickhelp--eldoc-cache (make-hash-table :test 'equal))
 (defvar php-quickhelp--company-cache (make-hash-table :test 'equal))
+(defvar php-quickhelp--use-fonts nil "If not-nil, php-quickhelp use proportional fonts for text.")
+(defvar php-quickhelp--use-colors nil "If not-nil, php-quickhelp respect color specifications.")
 
 (defun php-quickhelp--download-from-url (url)
   "Download a php_manual_en.json file from URL to dest path."
@@ -88,19 +90,18 @@
 (defun php-quickhelp--html2fontify-string (doc)
   "Convert html DOC to fontified string."
   (with-temp-buffer (insert doc)
-                    (setq-local shr-use-fonts nil)
-                    (setq-local shr-cookie-policy nil)
-                    (setq-local shr-use-colors nil)
-                    (setq-local shr-discard-aria-hidden t)
-                    (setq-local shr-inhibit-images t)
-                    (setq-local indent-tabs-mode nil)
-                    (shr-render-region (point-min) (point))
+                    (setq shr-use-fonts php-quickhelp--use-fonts
+                          shr-cookie-policy nil
+                          shr-use-colors php-quickhelp--use-colors
+                          shr-discard-aria-hidden t
+                          shr-inhibit-images t
+                          indent-tabs-mode nil)
+                    (shr-render-region (point-min) (point-max))
                     ;; remove last '\n'
                     (let ((s (buffer-string)))
                     (if (string-match "[ \t\n\r]+\\'" s)
                         (replace-match "" t t s)
-                      s))
-                    ))
+                      s))))
 
 (defun php-quickhelp--function (candidate)
   "Search CANDIDATE in the php manual."
