@@ -1,13 +1,15 @@
 # php-quickhelp [![MELPA](https://melpa.org/packages/php-quickhelp-badge.svg)](https://melpa.org/#/php-quickhelp) [![MELPA Stable](http://stable.melpa.org/packages/php-quickhelp-badge.svg)](http://stable.melpa.org/#/php-quickhelp)
 
 Provide quick help (and a eldoc beckend) for company-php and company-phpactor.
-It require [jq](https://stedolan.github.io/jq/ "Jq cmd-line json processor") to extract a short help from php manual.
+It require [jq](https://stedolan.github.io/jq/ "Jq cmd-line json processor")
+to extract a short help from php manual.
 
 ![php-quickhelp in action](php-quickhelp.png "php-quickhelp")
 
 ## Installation
 
-You can install `php-quickhelp` from [MELPA](http://melpa.org/#/php-quickhelp) or [MELPA Stable](http://stable.melpa.org/#/php-quickhelp) with `package.el`
+You can install `php-quickhelp` from [MELPA](http://melpa.org/#/php-quickhelp)
+or [MELPA Stable](http://stable.melpa.org/#/php-quickhelp) with `package.el`
 
 ```
  M-x package-install php-quickhelp
@@ -15,10 +17,13 @@ You can install `php-quickhelp` from [MELPA](http://melpa.org/#/php-quickhelp) o
 
 ## Usage
 
-After having installed this package, run `php-quickhelp-download-or-update` which downloads, from php.net, the php_manual_en.json file into `~/.emacs.d/php-quickhelp-manual` directory.
+After having installed this package, run `php-quickhelp-download-or-update` which
+downloads, from php.net, the php_manual_en.json file
+into `~/.emacs.d/php-quickhelp-manual` directory.
 
-php-quickhelp can be used with or without company-php and company-quickhelp.
-When used with company-php and company-quickhelp, it works like a wrapper for company-php or company-phpactor.
+php-quickhelp can be used with or without company-php, company-phpactor and company-quickhelp.
+When used with company-php, company-phpactor and company-quickhelp, it works
+like a wrapper for company-php or company-phpactor.
 
 For company-phpactor you can do something like this:
 
@@ -51,7 +56,11 @@ If you want to use the eldoc backend you can put, in your php-mode-hook, this:
        'php-quickhelp-eldoc-func)
 ```
 
-The function `php-quickhelp-at-point` can be used to show the documentation in the echo area.
+The function `php-quickhelp-at-point` can be used to
+show the documentation in the echo area.
+
+If you hit `M-x customize-group <RET> php-quickhelp <RET>` you'll
+find a few variables you can diddle.
 
 ## TODO
 

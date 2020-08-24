@@ -1,6 +1,6 @@
 ;;; php-quickhelp.el --- Quickhelp at point for php -*- lexical-binding: t; -*-
 ;; Copyright (C) 2020 Vincenzo Pupillo
-;; Version: 0.3.4
+;; Version: 0.4.0
 ;; Author: Vincenzo Pupillo
 ;; URL: https://github.com/vpxyz/php-quickhelp
 ;; Package-Requires: ((emacs "25.1"))
@@ -11,8 +11,8 @@
 ;; First of all you must install jq (https://stedolan.github.io/jq/).
 ;; Second run php-quickhelp-download-or-update.
 ;;
-;; php-quickhelp can be used with or without company-php and company-quickhelp.
-;; When used with company-php and company-quickhelp, it works like a wrapper for company-php or company-phpactor.
+;; php-quickhelp can be used with or without company-php, company-phpactor and company-quickhelp.
+;; When used with company-php, company-phpactor and company-quickhelp, it works like a wrapper for company-php or company-phpactor.
 ;; As an example, for company-phpactor,  you can do:
 ;; (add-hook 'php-mode-hook (lambda ()
 ;;     ;; .... other configs
@@ -27,7 +27,6 @@
 ;;
 ;; The function php-quickhelp-at-point can be used to show in the minibuffer the documentation.
 ;; For detail see: https://github.com/vpxyz/php-quickhelp
-
 
 ;;; License:
 
@@ -59,15 +58,39 @@
 (declare-function company-php "ext:company-php.el")
 (declare-function company-phpactor "ext:company-phpactor.el")
 
-(defvar php-quickhelp--dir (expand-file-name (locate-user-emacs-file "php-quickhelp-manual/")))
-(defvar php-quickhelp--filename "php_manual_en.json")
-(defvar php-quickhelp--dest (concat php-quickhelp--dir php-quickhelp--filename))
-(defvar php-quickhelp--url (concat "http://doc.php.net/downloads/json/" php-quickhelp--filename)) ;; https isn't available on doc.php.net
-(defvar php-quickhelp--jq-executable (concat (executable-find "jq") " "))
-(defvar php-quickhelp--eldoc-cache (make-hash-table :test 'equal))
-(defvar php-quickhelp--company-cache (make-hash-table :test 'equal))
-(defvar php-quickhelp--use-fonts nil "If not-nil, php-quickhelp use proportional fonts for text.")
-(defvar php-quickhelp--use-colors nil "If not-nil, php-quickhelp respect color specifications.")
+(defgroup php-quickhelp nil
+  "Quickhelp for PHP and company."
+  :prefix "php-quickhelp-"
+  :group 'company
+  :group 'php)
+
+(defcustom php-quickhelp-jq-executable
+  (eval-when-compile (concat (executable-find "jq") " "))
+  "Path to jq executable.
+It is recommemded not to customize this, but if you do, you'll
+have to ensure that jq support at least  -j -M  switchs."
+  :type 'string
+  :safe #'stringp
+  :group 'php-quickhelp)
+
+(defcustom php-quickhelp-dir
+  (eval-when-compile
+    (expand-file-name (locate-user-emacs-file "php-quickhelp-manual/")))
+  "Directory for php-quickhelp manual.  (default `~/.emacs.d/php-quickhelp-manual/')."
+  :type 'directory)
+
+(defcustom php-quickhelp-use-colors nil
+  "When non-NIL, php-quickhelp respect PHP manual color specifications (see `shr-use-colors')."
+  :type 'boolean
+  :group 'php-quickhelp)
+
+(defvar php-quickhelp--dir (expand-file-name (locate-user-emacs-file "php-quickhelp-manual/")) "Path of PHP manual.")
+(defvar php-quickhelp--filename "php_manual_en.json" "Default PHP manual filename.")
+(defvar php-quickhelp--dest (concat php-quickhelp-dir php-quickhelp--filename) "PHP manual destination.")
+(defvar php-quickhelp--url (concat "http://doc.php.net/downloads/json/" php-quickhelp--filename) "Url of PHP json manual.") ;; https isn't available on doc.php.net
+(defvar php-quickhelp--eldoc-cache (make-hash-table :test 'equal) "Cache of eldoc results.")
+(defvar php-quickhelp--help-cache (make-hash-table :test 'equal) "Cache of help results.")
+(defvar php-quickhelp--use-fonts nil "When non-NIL, php-quickhelp use proportional fonts for text (see `shr-use-fonts').")
 
 (defun php-quickhelp--download-from-url (url)
   "Download a php_manual_en.json file from URL to dest path."
@@ -92,34 +115,39 @@
   (with-temp-buffer (insert doc)
                     (setq shr-use-fonts php-quickhelp--use-fonts
                           shr-cookie-policy nil
-                          shr-use-colors php-quickhelp--use-colors
+                          shr-use-colors php-quickhelp-use-colors
                           shr-discard-aria-hidden t
                           shr-inhibit-images t
                           indent-tabs-mode nil)
                     (shr-render-region (point-min) (point-max))
                     ;; remove last '\n'
                     (let ((s (buffer-string)))
-                    (if (string-match "[ \t\n\r]+\\'" s)
-                        (replace-match "" t t s)
-                      s))))
+                      (if (string-match "[ \t\n\r]+\\'" s)
+                          (replace-match "" t t s)
+                        s))))
+
+(defun php-quickhelp--remove-empty (data)
+  "Remove 'empty' element from DATA."
+  (seq-filter (lambda (value)
+                (setq value (string-trim value))
+                (not (or (string= value "")
+                         (string= value "()"))))
+              data))
 
 (defun php-quickhelp--function (candidate)
   "Search CANDIDATE in the php manual."
   (or (fboundp 'libxml-parse-html-region)
       (error "This function requires Emacs to be compiled with libxml2"))
-  (or (gethash candidate php-quickhelp--company-cache)
+  (or (gethash candidate php-quickhelp--help-cache)
       (let (result tmp-strings)
         (setq result
               (shell-command-to-string
-               (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest)))
+               (concat php-quickhelp-jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest)))
         (unless (string-match "^null*" result)
           (setq tmp-strings (split-string result "###"))
           (setcar (nthcdr 1 tmp-strings) (php-quickhelp--html2fontify-string (nth 1 tmp-strings)))
-          ;; sometimes "return" content is empty, better remove it
-          (when (string= (string-trim (nth 1 tmp-strings)) "")
-            (setq tmp-strings (remove (nth 1 tmp-strings) tmp-strings)) nil)
           ;; a single "\n" isn't enough
-          (puthash candidate (string-join tmp-strings "\n\n") php-quickhelp--company-cache)))))
+          (puthash candidate (string-join (php-quickhelp--remove-empty tmp-strings) "\n\n") php-quickhelp--help-cache)))))
 
 (defun php-quickhelp--eldoc-function (candidate)
   "Search CANDIDATE in the php manual for eldoc."
@@ -127,7 +155,7 @@
       (let (result tmp-string arguments pos)
         (setq result
               (shell-command-to-string
-               (concat php-quickhelp--jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.prototype)\"' " php-quickhelp--dest)))
+               (concat php-quickhelp-jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.prototype)\"' " php-quickhelp--dest)))
         (unless (string-match "^null*" result)
           (setq tmp-string (split-string result " "))
           (when tmp-string
@@ -149,7 +177,7 @@
     (if (not (eq (get-text-property 0 'face candidate) 'php-static-method-call))
         (setq tmp-string (substring-no-properties candidate))
       ;; thing-at-point-looking-at requires a dirty trick in order to handle long static function call
-      (when (thing-at-point-looking-at "\\sw*\\\\*\\sw*\\\\*\\sw*\\\\*\\sw+::\\sw+")
+      (when (thing-at-point-looking-at "\\sw*\\\\*\\sw*\\\\*\\sw*\\\\*\\sw+::\\sw+_?\\sw+_?\\sw+_?\\sw+_?")
         (setq tmp-string (buffer-substring (match-beginning 0) (match-end 0)))))
     (replace-regexp-in-string (regexp-quote "\\") "\\\\" tmp-string t t)))
 
