@@ -57,6 +57,7 @@
 (declare-function company-doc-buffer "ext:company.el")
 (declare-function company-php "ext:company-php.el")
 (declare-function company-phpactor "ext:company-phpactor.el")
+(declare-function company-phpactor "ext:w3m.el")
 
 (defgroup php-quickhelp nil
   "Quickhelp for PHP and company."
@@ -80,8 +81,18 @@ have to ensure that jq support at least  -j -M  switchs."
   :type 'directory)
 
 (defcustom php-quickhelp-use-colors nil
-  "When non-NIL, php-quickhelp respect PHP manual color specifications (see `shr-use-colors')."
+  "When non-NIL, php-quickhelp respect PHP manual color specifications (works only with `shr', see `shr-use-colors')."
   :type 'boolean
+  :group 'php-quickhelp)
+
+(defcustom php-quickhelp-use-fonts nil
+  "When non-NIL, php-quickhelp respect PHP manual fonts specifications (works only with `shr', see `shr-use-fonts')."
+  :type 'boolean
+  :group 'php-quickhelp)
+
+(defcustom php-quickhelp-width 80
+  "Width of rendering window."
+  :type 'number
   :group 'php-quickhelp)
 
 (defvar php-quickhelp--dir (expand-file-name (locate-user-emacs-file "php-quickhelp-manual/")) "Path of PHP manual.")
@@ -90,7 +101,7 @@ have to ensure that jq support at least  -j -M  switchs."
 (defvar php-quickhelp--url (concat "http://doc.php.net/downloads/json/" php-quickhelp--filename) "Url of PHP json manual.") ;; https isn't available on doc.php.net
 (defvar php-quickhelp--eldoc-cache (make-hash-table :test 'equal) "Cache of eldoc results.")
 (defvar php-quickhelp--help-cache (make-hash-table :test 'equal) "Cache of help results.")
-(defvar php-quickhelp--use-fonts nil "When non-NIL, php-quickhelp use proportional fonts for text (see `shr-use-fonts').")
+
 
 (defun php-quickhelp--download-from-url (url)
   "Download a php_manual_en.json file from URL to dest path."
@@ -110,21 +121,48 @@ have to ensure that jq support at least  -j -M  switchs."
   (interactive)
   (php-quickhelp--download-from-url php-quickhelp--url))
 
-(defun php-quickhelp--html2fontify-string (doc)
+(defun php-quickhelp--html2fontify-string-w3m (doc)
   "Convert html DOC to fontified string."
-  (with-temp-buffer (insert doc)
-                    (setq-local shr-use-fonts php-quickhelp--use-fonts)
-                    (setq-local shr-cookie-policy nil)
-                    (setq-local shr-use-colors php-quickhelp-use-colors)
-                    (setq-local shr-discard-aria-hidden t)
-                    (setq-local shr-inhibit-images t)
-                    (setq-local indent-tabs-mode nil)
-                    (shr-render-region (point-min) (point-max))
-                    ;; remove last '\n'
-                    (let ((s (buffer-string)))
-                      (if (string-match "[\t\n\r]+\\'" s)
-                          (replace-match "" t t s)
-                        s))))
+  (with-temp-buffer
+    (insert doc)
+    ;; remove unuseful space chars
+    (goto-char (point-min))
+    (while (re-search-forward " +" nil t)
+      (replace-match " " nil nil))
+    (setq-local w3m-fill-column php-quickhelp-width)
+    (w3m-region (point-min) (point-max))
+    (buffer-string)
+    ;; remove last '\n'
+    (let ((s (buffer-string)))
+      (if (string-match "[\t\n\r]+\\'" s)
+          (replace-match "" t t s)
+        s))))
+
+(defun php-quickhelp--html2fontify-string-shr (doc)
+  "Convert html DOC to fontified string."
+  (with-temp-buffer
+    (insert doc)
+    ;; remove unuseful space chars
+    (goto-char (point-min))
+    (while (re-search-forward " +" nil t)
+      (replace-match " " nil nil))
+    (setq-local shr-use-fonts php-quickhelp-use-fonts
+                shr-cookie-policy nil
+                shr-use-colors php-quickhelp-use-colors
+                shr-width php-quickhelp-width
+                shr-inhibit-images t)
+    (shr-render-region (point-min) (point-max))
+    ;; remove last '\n'
+    (let ((s (buffer-string)))
+      (if (string-match "[\t\n\r]+\\'" s)
+          (replace-match "" t t s)
+        s))))
+
+(defun php-quickhelp--html2fontify-string (doc)
+  "Convert html DOC to fontified string using w3m if available, otherwise with shr."
+  (if (require 'w3m nil 'noerror)
+      (php-quickhelp--html2fontify-string-w3m doc)
+    (php-quickhelp--html2fontify-string-shr doc)))
 
 (defun php-quickhelp--remove-empty (data)
   "Remove 'empty' element from DATA."
@@ -186,7 +224,8 @@ have to ensure that jq support at least  -j -M  switchs."
   (interactive)
   (let ((candidate (thing-at-point 'symbol)))
     (when candidate
-      (message "%s" (php-quickhelp--function (php-quickhelp--from-candidate2jq candidate))))))
+      (with-output-to-temp-buffer "*PHP-Quickhelp*"
+      (display-message-or-buffer (php-quickhelp--function (php-quickhelp--from-candidate2jq candidate)) "*PHP-Quickhelp*")))))
 
 (defun php-quickhelp-eldoc-func ()
   "Php-quickhelp integration for eldoc."
