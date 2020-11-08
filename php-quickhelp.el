@@ -177,7 +177,8 @@ have to ensure that jq support at least  -j -M  switchs."
   (or (fboundp 'libxml-parse-html-region)
       (error "This function requires Emacs to be compiled with libxml2"))
   (or (gethash candidate php-quickhelp--help-cache)
-      (let (result tmp-strings)
+      (let ((result tmp-strings)
+            (default-directory "~/"))
         (setq result
               (shell-command-to-string
                (concat php-quickhelp-jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest)))
