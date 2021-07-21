@@ -240,8 +240,10 @@ have to ensure that jq support at least  -j -M  switchs."
     (cl-case command
       (doc-buffer
        (let ((doc (php-quickhelp--function (substring arg 0 -1))))
-         (when doc
-           (company-doc-buffer doc))))
+         (if doc
+           (company-doc-buffer doc)
+           (apply #'company-ac-php-backend command arg ignored)) ;; failback to company-php PHPDoc support
+         ))
       (t (apply #'company-ac-php-backend command arg ignored)))))
 
 (when (require 'company-phpactor nil 'noerror)
