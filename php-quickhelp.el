@@ -239,10 +239,10 @@ have to ensure that jq support at least  -j -M  switchs."
     "Provide quickhelp as `doc-buffer' for `company-php'."
     (cl-case command
       (doc-buffer
-       (let ((doc (php-quickhelp--function arg)))
+       (let ((doc (php-quickhelp--function (substring arg 0 -1))))
          (when doc
            (company-doc-buffer doc))))
-      (t (apply #'company-php command arg ignored)))))
+      (t (apply #'company-ac-php-backend command arg ignored)))))
 
 (when (require 'company-phpactor nil 'noerror)
   (defun php-quickhelp-company-phpactor (command &optional arg &rest ignored)

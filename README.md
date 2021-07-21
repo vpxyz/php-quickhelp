@@ -49,6 +49,7 @@ For company-php, something like this:
 ``` elisp
 (add-hook 'php-mode-hook (lambda ()
     ;; .... other configs
+    (require 'company-php)
     (require 'php-quickhelp)
     (set (make-local-variable 'company-backends)
     '(php-quickhelp-company-php company-web-html company-dabbrev-code company-files))
