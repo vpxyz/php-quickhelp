@@ -29,14 +29,16 @@ you set `display_borders 1` option in w3m config file, the rendering look like t
 ![php-quickhelp with w3m in action](php-quickhelp-w3m.png "php-quickhelp-w3m")
 
 php-quickhelp can be used with or without company-php, company-phpactor and company-quickhelp.
-When used with company-php, company-phpactor and company-quickhelp, it works
+When used with company-php, company-phpactor and company-quickhelp
+(and company-quickhelp-terminal if you want to use with console), it works
 like a wrapper for company-php or company-phpactor.
 
-For company-phpactor you can do something like this:
+For company-phpactor you can do something like this (you must activate company-quickhelp-mode):
 
 ``` elisp
 (add-hook 'php-mode-hook (lambda ()
     ;; .... other configs
+    (require ''company-phpactor)
     (require 'php-quickhelp)
     (set (make-local-variable 'company-backends)
     '(php-quickhelp-company-phpactor company-web-html company-dabbrev-code company-files))
