@@ -104,7 +104,6 @@ have to ensure that jq support at least  -j -M  switchs."
 (defvar php-quickhelp--eldoc-cache (make-hash-table :test 'equal) "Cache of eldoc results.")
 (defvar php-quickhelp--help-cache (make-hash-table :test 'equal) "Cache of help results.")
 
-
 (defun php-quickhelp--download-from-url (url)
   "Download a php_manual_en.json file from URL to dest path."
   (let ((dest php-quickhelp--dir))
@@ -179,11 +178,10 @@ have to ensure that jq support at least  -j -M  switchs."
   (or (fboundp 'libxml-parse-html-region)
       (error "This function requires Emacs to be compiled with libxml2"))
   (or (gethash candidate php-quickhelp--help-cache)
-      (let (result tmp-strings
-            (default-directory "~/"))
+      (let (result tmp-strings)
         (setq result
               (shell-command-to-string
-               (concat php-quickhelp-jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest)))
+               (concat php-quickhelp-jq-executable " -j -M \".[\\\"" candidate "\\\"] | \\\"\\(.purpose)###\\(.return)###(\\(.versions))\\\"\" " php-quickhelp--dest)))
         (unless (string-match "^null*" result)
           (setq tmp-strings (split-string result "###"))
           (setcar (nthcdr 1 tmp-strings) (php-quickhelp--html2fontify-string (nth 1 tmp-strings)))
@@ -196,7 +194,7 @@ have to ensure that jq support at least  -j -M  switchs."
       (let (result tmp-string arguments pos)
         (setq result
               (shell-command-to-string
-               (concat php-quickhelp-jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.prototype)\"' " php-quickhelp--dest)))
+               (concat php-quickhelp-jq-executable " -j -M \".[\\\"" candidate "\\\"] | \\\"\\(.prototype)\\\"\" " php-quickhelp--dest)))
         (unless (string-match "^null*" result)
           (setq tmp-string (split-string result " "))
           (when tmp-string
