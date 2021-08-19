@@ -183,7 +183,7 @@ have to ensure that jq support at least  -j -M  switchs."
             (default-directory "~/"))
         (setq result
               (shell-command-to-string
-               (concat php-quickhelp-jq-executable " -j -M '.[\"" candidate "\"] | \"\\(.purpose)###\\(.return)###(\\(.versions))\"' " php-quickhelp--dest)))
+               (concat php-quickhelp-jq-executable " -j -M \".[\\\"" candidate "\\\"] | \\\"\\(.purpose)###\\(.return)###(\\(.versions))\\\"\" " php-quickhelp--dest)))
         (unless (string-match "^null*" result)
           (setq tmp-strings (split-string result "###"))
           (setcar (nthcdr 1 tmp-strings) (php-quickhelp--html2fontify-string (nth 1 tmp-strings)))
